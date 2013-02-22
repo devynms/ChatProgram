@@ -23,10 +23,13 @@ public abstract class Component implements Runnable {
 	protected Component() {
 		messageBox = new LinkedBlockingQueue<Object>();
 		isGood = true;
+		
 		logMessage = null;
+		autoLog = true;
 	}
 	
-	private StringBuilder logMessage;
+	private StringBuilder 	logMessage;
+	protected boolean		autoLog;
 	
 	protected final void log(String msg) {
 		if ( logMessage == null ) {
@@ -87,8 +90,12 @@ public abstract class Component implements Runnable {
 	public final void run() {
 		while( isGood ) {
 			runOnce();
-			if(logMessage != null) // catch unfinished logs
-				postLog();
+			if(logMessage != null) { // catch unfinished logs
+				if(autoLog)
+					postLog();
+				else
+					logMessage = null;
+			}
 		}
 	}
 }

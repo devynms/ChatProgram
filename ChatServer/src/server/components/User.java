@@ -22,6 +22,7 @@ public class User extends Component {
 			log("swallowed ioexception\tUser constructor");
 		}
 		this.parent = null;
+		autoLog = false;
 	}
 	
 	@Override
