@@ -1,8 +1,9 @@
-package server.components;
+package server.actors;
 
 import java.util.ArrayList;
+import server.services.*;
 
-public class ChatServer extends Component {
+public class ChatServer extends Actor {
 	
 	private ArrayList<User> users;
 	
@@ -16,7 +17,7 @@ public class ChatServer extends Component {
 		user.sendMessage(new JoinedServerMessage(this));
 	}
 	
-	public void handleChatMessage(User.ChatMessage msg) {
+	public void handleChatMessage(MessageFetcher.ChatMessage msg) {
 		for(User u : users) {
 			u.sendMessage(msg);
 		}
@@ -34,8 +35,8 @@ public class ChatServer extends Component {
 		//System.out.println("Chat server got a message!!" + msg);
 		if ( msg instanceof ServerListener.HandleUserMessage ) {
 			handleHandleUserMessage((ServerListener.HandleUserMessage)msg);
-		} else if ( msg instanceof User.ChatMessage ) {
-			handleChatMessage((User.ChatMessage)msg);
+		} else if ( msg instanceof MessageFetcher.ChatMessage ) {
+			handleChatMessage((MessageFetcher.ChatMessage)msg);
 		} else if ( msg instanceof User.UserDisconnectMessage ) {
 			handleUserDisconnectMessage((User.UserDisconnectMessage)msg);
 		}
@@ -55,6 +56,11 @@ public class ChatServer extends Component {
 		public String toString() {
 			return "JoinedServerMessage#{ " + server.toString() + " }";
 		}
+	}
+
+	@Override
+	protected void onError() {
+		// nothing so far, but we'd probably have to tell all our users that we're dead!
 	}
 
 }

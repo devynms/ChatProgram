@@ -1,10 +1,10 @@
-package server.components;
+package server.actors;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class ServerListener extends Component {
+public class ServerListener extends Actor {
 	
 	private static final int PORT_NO = 2013;
 	
@@ -13,7 +13,7 @@ public class ServerListener extends Component {
 	
 	public ServerListener() {
 		onlyServer = new ChatServer();
-		Component.spawn(onlyServer);
+		Actor.spawn(onlyServer);
 		try {
 			listener = new ServerSocket(PORT_NO);
 		} catch (IOException e) {
@@ -34,7 +34,7 @@ public class ServerListener extends Component {
 		try {
 			Socket connection = listener.accept();
 			User user = new User(connection);
-			Component.spawn(user);
+			Actor.spawn(user);
 			onlyServer.sendMessage(new HandleUserMessage(user));
 		} catch (IOException e) {
 			System.out.println("couldn't make user");
@@ -50,6 +50,15 @@ public class ServerListener extends Component {
 		
 		public String toString() {
 			return "HandleUserMessage#{ " + user.toString() + " }";
+		}
+	}
+
+	@Override
+	protected void onError() {
+		try {
+			listener.close();
+		} catch ( IOException e ) {
+			logAndPost("swallowed IOException\tServerListener.onError");
 		}
 	}
 }

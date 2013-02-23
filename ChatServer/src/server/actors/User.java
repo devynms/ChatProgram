@@ -1,22 +1,27 @@
-package server.components;
+package server.actors;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import org.json.*;
+import server.services.*;
 
-public class User extends Component {
+public class User extends Actor {
 
-	Socket		userSocket;
-	Component	parent;
-	DataInputStream		input;
-	DataOutputStream	output;
+	private Socket	userSocket;
+	private Actor	parent;
+	private MessageFetcher		messageFetcher;
+	private DataOutputStream	output;
 	
 	public User(Socket userSocket) {
 		this.userSocket = userSocket;
 		try {
-			input = new DataInputStream(userSocket.getInputStream());
+			messageFetcher = new MessageFetcher(
+					this, 
+					new DataInputStream(userSocket.getInputStream())
+					);
+			server.Component.spawn(messageFetcher);
 			output = new DataOutputStream(userSocket.getOutputStream());
 		} catch (IOException e) {
 			log("swallowed ioexception\tUser constructor");
@@ -27,34 +32,28 @@ public class User extends Component {
 	
 	@Override
 	public void runOnce() {
-		Object msg = receiveMessage(50L);
+		Object msg = receiveMessage();
 		if ( msg == null ) {
-			handleNoMessage();
-		} else if ( msg instanceof ChatMessage ) {
-			handleChatMessage((ChatMessage)msg);
+			Thread.yield();
+		} else if ( msg instanceof MessageFetcher.ChatMessage ) {
+			if ( parent != null ) {
+				handleChatMessage((MessageFetcher.ChatMessage)msg);
+			} else {
+				this.sendMessage(msg);
+			}
 		} else if ( msg instanceof ChatServer.JoinedServerMessage ) {
 			handleJoinServerMessage((ChatServer.JoinedServerMessage)msg);
-		}
-	}
-	
-	public void handleNoMessage() {
-		if ( parent != null ) {
-			try {
-				String s = input.readUTF();
-				JSONObject jsonMsg = new JSONObject(s);
-				if (jsonMsg.getString("type").equals("message")) {
-					parent.sendMessage(new ChatMessage(jsonMsg.getString("content")));
-				}
-			} catch ( IOException e ) {
+		} else if ( msg instanceof MessageFetcher.CommunicationFailureMessage ) {
+			if ( parent != null ) {
 				parent.sendMessage(new UserDisconnectMessage(this));
 				signalError();
-			} catch ( JSONException e) {
-				logAndPost("swallowed jsonexception\tUser no message");
+			} else { // must make sure that chat server is aware that it lost a user!!
+				this.sendMessage(msg);
 			}
 		}
 	}
 	
-	public void handleChatMessage(ChatMessage msg) {
+	public void handleChatMessage(MessageFetcher.ChatMessage msg) {
 		JSONObject out = new JSONObject();
 		try {
 			out.put("type", "message");
@@ -89,18 +88,6 @@ public class User extends Component {
 		}
 	}
 	
-	public class ChatMessage {
-		public final String contents;
-		
-		private ChatMessage(String contents) {
-			this.contents = contents;
-		}
-		
-		public String toString() {
-			return "ChatMessage#{ " + contents + " }";
-		}
-	}
-	
 	public class UserDisconnectMessage {
 		public final User user;
 		
@@ -110,6 +97,15 @@ public class User extends Component {
 		
 		public String toString() {
 			return "UserDisconnectMessage#{ " + user.toString() + " }";
+		}
+	}
+
+	@Override
+	protected void onError() {
+		try {
+			output.close();
+		} catch (IOException e) {
+			this.logAndPost("swallowed IOException\tUser.onError");
 		}
 	}
 
