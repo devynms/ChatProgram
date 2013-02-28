@@ -16,8 +16,9 @@ public class Display implements ActionListener{
 	private JTextField enter;
 	private JTextArea viewer;
 	private JFrame frame;
+	private CommunicationLayer layer;
 	
-	public Display(){
+	public Display(CommunicationLayer layer){
 		frame = new JFrame();
 		frame.setSize(600, 700);
 		frame.setTitle("qqChAtClIeNtxXx5eVeRqq#yoloswag");
@@ -40,6 +41,8 @@ public class Display implements ActionListener{
 		text = "";
 		
 		frame.setVisible(true);
+		
+		this.layer = layer;
 	}
 	
 	public JTextField getTyper(){
@@ -48,6 +51,10 @@ public class Display implements ActionListener{
 	
 	public JTextArea getViewer(){
 		return viewer;
+	}
+	
+	public void printMessage(String message){
+		viewer.append(message + "\n");
 	}
 	
 	public JFrame getFrame(){
@@ -70,6 +77,7 @@ public class Display implements ActionListener{
 		enter = (JTextField)e.getSource();
 		this.text = enter.getText();
 		typer.setText("");
-		CommunicationLayer.sendMessage();
+		layer.sendMessage(text);
+		this.clear();
 	}
 }

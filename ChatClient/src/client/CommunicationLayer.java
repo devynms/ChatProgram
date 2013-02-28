@@ -8,52 +8,60 @@ import org.json.JSONObject;
 
 public class CommunicationLayer{
 
-	private static Socket s;
-	private static DataInputStream input;
-	private static DataOutputStream output;
-	private static Display gui;
+	private Socket s;
+	private DataInputStream input;
+	private DataOutputStream output;
 	
 	
-	public CommunicationLayer(Display gui){
+	public CommunicationLayer(String ip){
 		try{
-		s = new Socket("172.20.1.158"/*"129.22.33.44"*/, 2013);
+		s = new Socket(ip/*"172.20.1.158"*//*"129.22.33.44"*/, 2013);
 		input =  new DataInputStream(s.getInputStream());
 		output = new DataOutputStream(s.getOutputStream());
-		this.gui = gui;
+		s.setSoTimeout(500);
 		}
 		catch (Exception e){}
 	}
 	
-	public static void sendMessage(){
+	public void sendMessage(String message){
 		try{
 		JSONObject jsonMessage = new JSONObject();
 		jsonMessage.put("type", "message");
-		jsonMessage.put("content", "xXx Hookers xXx: " + gui.getText());
+		jsonMessage.put("content", "xXx Hookers xXx: " + message);
 		output.writeUTF(jsonMessage.toString());
-		gui.clear();
+		System.out.println("sent a message: " + jsonMessage.toString());
 		}
 		catch(Exception e){}
 	}
 	
-	public static void getMessage(){
+	public String getMessage(){
 		try{
 		String serverMessage = input.readUTF();
 		JSONObject messageReceived = new JSONObject(serverMessage);
 		if(messageReceived.get("type").equals("message")) {
-			gui.getViewer().append(messageReceived.get("content") + "\n");
+			return (String)messageReceived.get("content");
 		}
+		else
+			return null;
 		}
 		catch (Exception e){}
+		return null;
 	}
 	
-	public static void close(){
+	public void close(){
 		try{
+		output.close();
 		s.close();
 		}
 		catch(Exception e){}
 	}
 	
-	public static boolean isConnected(){
+	public boolean isConnected(){
 		return s.isConnected();
+	}
+	
+	public boolean checkForMessage(){
+		
+		return true; //TODO something here
 	}
 }
