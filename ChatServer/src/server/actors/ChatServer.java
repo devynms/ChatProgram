@@ -1,7 +1,6 @@
 package server.actors;
 
 import java.util.ArrayList;
-import server.services.*;
 
 public class ChatServer extends Actor {
 	
@@ -18,7 +17,7 @@ public class ChatServer extends Actor {
 		user.sendMessage(new JoinedServerMessage(this));
 	}
 	
-	public void handleChatMessage(MessageFetcher.ChatMessage msg) {
+	public void handleChatMessage(User.ChatMessage msg) {
 		log("caught chat message");
 		for(User u : users) {
 			u.sendMessage(msg);
@@ -36,8 +35,8 @@ public class ChatServer extends Actor {
 		log("handling message");
 		if ( msg instanceof ServerListener.HandleUserMessage ) {
 			handleHandleUserMessage((ServerListener.HandleUserMessage)msg);
-		} else if ( msg instanceof MessageFetcher.ChatMessage ) {
-			handleChatMessage((MessageFetcher.ChatMessage)msg);
+		} else if ( msg instanceof User.ChatMessage ) {
+			handleChatMessage((User.ChatMessage)msg);
 		} else if ( msg instanceof User.UserDisconnectMessage ) {
 			handleUserDisconnectMessage((User.UserDisconnectMessage)msg);
 		}

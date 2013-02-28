@@ -48,14 +48,14 @@ public class MessageFetcher extends Service {
 	}
 	
 	public class ChatMessage {
-		public final String contents;
+		public final String message;
 		
 		private ChatMessage(String contents) {
-			this.contents = contents;
+			this.message = contents;
 		}
 		
 		public String toString() {
-			return "ChatMessage#{ " + contents + " }";
+			return "ChatMessage#{ " + message + " }";
 		}
 	}
 

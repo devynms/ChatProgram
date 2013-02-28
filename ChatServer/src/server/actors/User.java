@@ -35,7 +35,9 @@ public class User extends Actor {
 		Object msg = receiveMessage();
 		if ( msg == null ) {
 			Thread.yield();
-		} else if ( msg instanceof MessageFetcher.ChatMessage ) {
+		} else if ( msg instanceof User.ChatMessage ) {
+			handleChatMessage((User.ChatMessage)msg);
+		}else if ( msg instanceof MessageFetcher.ChatMessage ) {
 			log("handling MessageFetcher.ChatMessage");
 			if ( parent != null ) {
 				handleChatMessage((MessageFetcher.ChatMessage)msg);
@@ -57,11 +59,11 @@ public class User extends Actor {
 		postLog();
 	}
 	
-	public void handleChatMessage(MessageFetcher.ChatMessage msg) {
+	public void handleChatMessage(User.ChatMessage msg) {
 		JSONObject out = new JSONObject();
 		try {
 			out.put("type", "message");
-			out.put("content", msg.contents);
+			out.put("content", msg.message);
 			output.writeUTF(out.toString());
 			log("sent message back to user");
 		} catch ( JSONException e ) {
@@ -69,6 +71,10 @@ public class User extends Actor {
 		} catch ( IOException e ) {
 			logAndPost("swallowed IOException in handleChatMessage");
 		}
+	}
+	
+	public void handleChatMessage(MessageFetcher.ChatMessage msg) {
+		parent.sendMessage(msg);
 	}
 	
 	public void handleJoinServerMessage(ChatServer.JoinedServerMessage msg) {
@@ -81,6 +87,22 @@ public class User extends Actor {
 	
 	public enum UserCommand {
 		JOIN_SERVER
+	}
+	
+	public class ChatMessage {
+		public final String message;
+		
+		private ChatMessage( MessageFetcher.ChatMessage msg ) {
+			message = msg.message;
+		}
+		
+		private ChatMessage(String message) {
+			this.message = message;
+		}
+		
+		public String toString() {
+			return "ChatMessage#{ " + message + " }";
+		}
 	}
 	
 	public class PostedCommand {
@@ -109,6 +131,7 @@ public class User extends Actor {
 	protected void onError() {
 		try {
 			output.close();
+			userSocket.close();
 		} catch (IOException e) {
 			this.logAndPost("swallowed IOException\tUser.onError");
 		}
