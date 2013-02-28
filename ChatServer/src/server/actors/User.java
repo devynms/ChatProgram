@@ -36,14 +36,17 @@ public class User extends Actor {
 		if ( msg == null ) {
 			Thread.yield();
 		} else if ( msg instanceof MessageFetcher.ChatMessage ) {
+			log("handling MessageFetcher.ChatMessage");
 			if ( parent != null ) {
 				handleChatMessage((MessageFetcher.ChatMessage)msg);
 			} else {
 				this.sendMessage(msg);
 			}
 		} else if ( msg instanceof ChatServer.JoinedServerMessage ) {
+			log("handling ChatServer.JoinedServerMessage");
 			handleJoinServerMessage((ChatServer.JoinedServerMessage)msg);
 		} else if ( msg instanceof MessageFetcher.CommunicationFailureMessage ) {
+			log("handling MessageFetcher.CommunicationFailureMessage");
 			if ( parent != null ) {
 				parent.sendMessage(new UserDisconnectMessage(this));
 				signalError();
@@ -51,6 +54,7 @@ public class User extends Actor {
 				this.sendMessage(msg);
 			}
 		}
+		postLog();
 	}
 	
 	public void handleChatMessage(MessageFetcher.ChatMessage msg) {
@@ -59,6 +63,7 @@ public class User extends Actor {
 			out.put("type", "message");
 			out.put("content", msg.contents);
 			output.writeUTF(out.toString());
+			log("sent message back to user");
 		} catch ( JSONException e ) {
 			logAndPost("swallowed JSONException in handleChatMessage");
 		} catch ( IOException e ) {

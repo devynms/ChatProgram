@@ -7,6 +7,10 @@ public abstract class Service extends Component {
 	
 	private final Actor master;
 	
+	protected String masterToString() {
+		return master.toString();
+	}
+	
 	public Service(Actor master) {
 		this.master = master;
 	}
@@ -17,7 +21,9 @@ public abstract class Service extends Component {
 	@Override
 	public final void runOnce() {
 		Object serviceMessage = procureService();
-		if (serviceMessage != null)
+		if (serviceMessage != null) {
 			master.sendMessage(serviceMessage);
+			logAndPost("sending message " + serviceMessage.toString() + " to master " + master.toString());
+		}
 	}
 }

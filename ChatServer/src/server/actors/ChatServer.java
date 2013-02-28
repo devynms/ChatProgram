@@ -12,27 +12,28 @@ public class ChatServer extends Actor {
 	}
 	
 	public void handleHandleUserMessage(ServerListener.HandleUserMessage msg) {
+		log("caught handle user message");
 		User user = msg.user;
 		users.add(user);
 		user.sendMessage(new JoinedServerMessage(this));
 	}
 	
 	public void handleChatMessage(MessageFetcher.ChatMessage msg) {
+		log("caught chat message");
 		for(User u : users) {
 			u.sendMessage(msg);
 		}
-		//System.out.println("Caught user message.");
 	}
 	
 	public void handleUserDisconnectMessage(User.UserDisconnectMessage msg) {
+		log("handling user disconnect message");
 		users.remove(msg.user);
-		//System.out.println("CHAT SERVER: User disconnected. " + msg.user);
 	}
 
 	@Override
 	public void runOnce() {
 		Object msg = this.receiveMessage();
-		//System.out.println("Chat server got a message!!" + msg);
+		log("handling message");
 		if ( msg instanceof ServerListener.HandleUserMessage ) {
 			handleHandleUserMessage((ServerListener.HandleUserMessage)msg);
 		} else if ( msg instanceof MessageFetcher.ChatMessage ) {
@@ -40,10 +41,18 @@ public class ChatServer extends Actor {
 		} else if ( msg instanceof User.UserDisconnectMessage ) {
 			handleUserDisconnectMessage((User.UserDisconnectMessage)msg);
 		}
+		log(toString());
+		postLog();
 	}
 	
 	public String toString() {
-		return "Chat Server";
+		StringBuilder b = new StringBuilder();
+		b.append("Chat Server#{ ");
+		for(User u : users) {
+			b.append(u.toString());
+		}
+		b.append(" }");
+		return b.toString();
 	}
 	
 	public class JoinedServerMessage {

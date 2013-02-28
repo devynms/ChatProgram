@@ -36,7 +36,7 @@ public abstract class Component implements Runnable {
 	}
 	
 	private	StringBuilder 	logMessage;
-	protected	boolean		autoLog;
+	protected	boolean		autoLog = true;
 	
 	protected final void log(String msg) {
 		if ( logMessage == null ) {

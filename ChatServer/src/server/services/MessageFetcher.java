@@ -32,7 +32,13 @@ public class MessageFetcher extends Service {
 		} catch ( JSONException e ) {
 			logAndPost("swallowed jsonexception\tUser no message");
 		}
+		postLog();
 		return message;
+	}
+	
+	@Override
+	public String toString() {
+		return "Message Fetcher#{ " + masterToString() + " }";
 	}
 	
 	public class CommunicationFailureMessage {
