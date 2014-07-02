@@ -17,12 +17,13 @@ public class User extends Actor {
 	public User(Socket userSocket) {
 		this.userSocket = userSocket;
 		try {
+			output = new DataOutputStream(userSocket.getOutputStream());
+			System.out.println(userSocket.isOutputShutdown());
+			DataInputStream input = new DataInputStream(userSocket.getInputStream());
 			messageFetcher = new MessageFetcher(
 					this, 
-					new DataInputStream(userSocket.getInputStream())
-					);
+					input);
 			server.Component.spawn(messageFetcher);
-			output = new DataOutputStream(userSocket.getOutputStream());
 		} catch (IOException e) {
 			log("swallowed ioexception\tUser constructor");
 		}
@@ -59,6 +60,7 @@ public class User extends Actor {
 			out.put("type", "message");
 			out.put("content", msg.contents);
 			output.writeUTF(out.toString());
+			output.flush();
 		} catch ( JSONException e ) {
 			logAndPost("swallowed JSONException in handleChatMessage");
 		} catch ( IOException e ) {

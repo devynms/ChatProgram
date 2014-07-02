@@ -26,7 +26,7 @@ public class ServerListener extends Actor {
 		ServerListener server = new ServerListener();
 		System.out.println("starting...");
 		Thread t = new Thread(server);
-		t.run();
+		t.start();
 	}
 
 	@Override

@@ -32,11 +32,13 @@ public class ChatServer extends Actor {
 	@Override
 	public void runOnce() {
 		Object msg = this.receiveMessage();
+		System.out.println(msg);
 		//System.out.println("Chat server got a message!!" + msg);
 		if ( msg instanceof ServerListener.HandleUserMessage ) {
 			handleHandleUserMessage((ServerListener.HandleUserMessage)msg);
 		} else if ( msg instanceof MessageFetcher.ChatMessage ) {
 			handleChatMessage((MessageFetcher.ChatMessage)msg);
+			System.out.println(msg);
 		} else if ( msg instanceof User.UserDisconnectMessage ) {
 			handleUserDisconnectMessage((User.UserDisconnectMessage)msg);
 		}
