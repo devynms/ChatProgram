@@ -35,7 +35,7 @@ public class ServerListener extends Actor {
 			System.out.println("try accept");
 			Socket connection = listener.accept();
 			System.out.println("accepted user");
-			User user = new User(connection);
+			User user = new User(connection, onlyServer);
 			Actor.spawn(user);
 			onlyServer.sendMessage(new HandleUserMessage(user));
 		} catch (IOException e) {

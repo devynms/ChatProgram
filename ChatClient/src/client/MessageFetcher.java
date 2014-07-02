@@ -23,12 +23,10 @@ public class MessageFetcher implements Runnable{
 		while(true){
 			Object message = null;
 			try {
-				System.out.println();
 				String s = input.readUTF();
 				JSONObject jsonMsg = new JSONObject(s);
 				if (jsonMsg.getString("type").equals("message")) {
 					message = jsonMsg.getString("content");
-					System.out.println(message);
 				}
 			}
 			catch(Exception e){}
