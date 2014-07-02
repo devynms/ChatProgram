@@ -32,13 +32,20 @@ public class ServerListener extends Actor {
 	@Override
 	public void runOnce() {
 		try {
+			System.out.println("try accept");
 			Socket connection = listener.accept();
+			System.out.println("accepted user");
 			User user = new User(connection);
 			Actor.spawn(user);
 			onlyServer.sendMessage(new HandleUserMessage(user));
 		} catch (IOException e) {
 			System.out.println("couldn't make user");
 		}
+	}
+	
+	@Override
+	public String toString() {
+		return "ServerListener";
 	}
 
 	public class HandleUserMessage {
