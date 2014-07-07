@@ -16,12 +16,12 @@ public class Display implements ActionListener{
 	private JTextField enter;
 	private JTextArea viewer;
 	private JFrame frame;
-	private CommunicationLayer layer;
+	private ChatClient client;
 	
-	public Display(CommunicationLayer layer){
+	public Display(ChatClient client){
 		frame = new JFrame();
 		frame.setSize(600, 700);
-		frame.setTitle("qqChAtClIeNtxXx5eVeRqq#yoloswag");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		viewer = new JTextArea();
 		viewer.setVisible(true);
@@ -42,7 +42,7 @@ public class Display implements ActionListener{
 		
 		frame.setVisible(true);
 		
-		this.layer = layer;
+		this.client = client;
 	}
 	
 	public JTextField getTyper(){
@@ -73,11 +73,15 @@ public class Display implements ActionListener{
 		return text.equals("");
 	}
 	
+	public void close(){
+		System.exit(0);
+	}
+	
 	public void actionPerformed(ActionEvent e){
 		enter = (JTextField)e.getSource();
 		this.text = enter.getText();
 		typer.setText("");
-		layer.sendMessage(text);
+		client.sendToLayer(text);
 		this.clear();
-	}
+	}	
 }

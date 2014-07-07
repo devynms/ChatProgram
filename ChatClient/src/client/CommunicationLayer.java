@@ -2,7 +2,7 @@ package client;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
-import java.util.concurrent.Executors;
+import java.util.LinkedList;
 
 import org.json.JSONObject;
 
@@ -10,21 +10,21 @@ import org.json.JSONObject;
 public class CommunicationLayer{
 
 	private Socket s;
-	DataInputStream input;
+	private DataInputStream input;
 	private DataOutputStream output;
-	private MessageFetcher fetcher;
-	private Display gui;
+	public LinkedList<String> messages;
+	private ChatClient client;
 	
-	public CommunicationLayer(String ip){
+	public CommunicationLayer(String ip, ChatClient client){
 		try{
 		s = new Socket(ip, 2013);
 		input =  new DataInputStream(s.getInputStream());
 		output = new DataOutputStream(s.getOutputStream());
-		//s.setSoTimeout(500);
 		}
 		catch (Exception e){}
-		gui = new Display(this);
-		fetcher = new MessageFetcher(this);
+		this.client = client;
+		messages = new LinkedList<String>();
+		MessageFetcher fetcher = new MessageFetcher();
 		new Thread(fetcher).start();
 	}
 	
@@ -40,8 +40,8 @@ public class CommunicationLayer{
 	}
 	
 	public void processMessage(){
-		if (fetcher.messages.peek() != null){
-			gui.printMessage(fetcher.messages.pop());
+		if (messages.peek() != null){
+			client.sendToGui(messages.pop());
 		}
 	}
 	
@@ -55,5 +55,35 @@ public class CommunicationLayer{
 	
 	public boolean isConnected(){
 		return s.isConnected();
+	}
+	
+	public class MessageFetcher implements Runnable{
+		
+		public MessageFetcher(){
+		}
+		
+		private void GrabMessages(){
+				Object message = null;
+				try {
+					String s = input.readUTF();
+					JSONObject jsonMsg = new JSONObject(s);
+					if (jsonMsg.getString("type").equals("message")) {
+						message = jsonMsg.getString("content");
+					}
+				}
+				catch(Exception e){}
+				if(message != null){
+					messages.add((String) message);
+					processMessage();
+				}
+		}
+		
+		public void run(){
+			while(s.isConnected()){
+				GrabMessages();
+			}
+			System.out.println("halting fetcher");
+			close();
+		}
 	}
 }
