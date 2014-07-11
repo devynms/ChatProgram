@@ -23,9 +23,7 @@ public class MessageFetcher extends Service {
 		try {
 			String s = input.readUTF();
 			JSONObject jsonMsg = new JSONObject(s);
-			if (jsonMsg.getString("type").equals("message")) {
-				message = new ChatMessage(jsonMsg.getString("content"));
-			}
+			message = jsonMsg;
 		} catch ( IOException e ) {
 			message = new CommunicationFailureMessage();
 			signalError();
@@ -44,18 +42,6 @@ public class MessageFetcher extends Service {
 	public class CommunicationFailureMessage {
 		private CommunicationFailureMessage() {
 			// private constructor
-		}
-	}
-	
-	public class ChatMessage {
-		public final String message;
-		
-		private ChatMessage(String contents) {
-			this.message = contents;
-		}
-		
-		public String toString() {
-			return "ChatMessage#{ " + message + " }";
 		}
 	}
 

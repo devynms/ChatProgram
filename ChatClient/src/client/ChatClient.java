@@ -1,5 +1,8 @@
 package client;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
+
 import javax.swing.JOptionPane;
 
 /**
@@ -16,10 +19,13 @@ public class ChatClient{
 	 * Starts up the chat client and makes sure that all components can communicate with each other.
 	 */
 	public ChatClient(){
-		layer = new CommunicationLayer(this.IPDialog(), this);
 		gui = new Display(this);
+		layer = new CommunicationLayer(IPDialog(), this);
 		layer.setDisplay(gui);
+		layer.sendJson("server","user", UsernameDialog());
 		gui.setCommunicationLayer(layer);
+		layer.sendJson("client", "status", "online");
+		layer.sendJson("server", "status", "all");
 	}
 	
 	/**
@@ -34,7 +40,6 @@ public class ChatClient{
 		System.exit(0);
 	}
 	
-	//prompt the user for the server ip
 	/**
 	 * Prompts the user for the server IP address to connect to.
 	 * 
@@ -46,6 +51,16 @@ public class ChatClient{
 	}
 	
 	/**
+	 * Prompts the user for a nickname that will be visible to other users.
+	 * 
+	 * @return The user's name
+	 */
+	public String UsernameDialog(){
+		JOptionPane p = new JOptionPane();
+		return p.showInputDialog("What nickname would you like to use?");
+	}
+	
+	/**
 	 * A main method to start the chat client.
 	 * No arguments are necessary.
 	 * 
@@ -54,6 +69,10 @@ public class ChatClient{
 	public static void main(String[] args){
 		
 		new ChatClient();
-		
+		Hashtable<String, String> hash = new Hashtable<String, String>();
+		hash.put("a", "b");
+		hash.put("ac", "bq");
+		hash.put("ad", "ba");
+		System.out.println(hash.toString());
 	}
 }

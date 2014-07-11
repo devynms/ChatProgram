@@ -4,7 +4,9 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+
 import org.json.*;
+
 import server.services.*;
 
 public class User extends Actor {
@@ -13,6 +15,8 @@ public class User extends Actor {
 	private Actor	parent;
 	private MessageFetcher		messageFetcher;
 	private DataOutputStream	output;
+	String name;
+	String status;
 
 	public User(Socket userSocket, ChatServer onlyServer) {
 		this.userSocket = userSocket;
@@ -35,14 +39,28 @@ public class User extends Actor {
 		Object msg = receiveMessage();
 		if ( msg == null ) {
 			Thread.yield();
-		} else if ( msg instanceof User.ChatMessage ) {
-			handleChatMessage((User.ChatMessage)msg);
-		}else if ( msg instanceof MessageFetcher.ChatMessage ) {
-			log("handling MessageFetcher.ChatMessage");
-			if ( parent != null ) {
-				handleChatMessage((MessageFetcher.ChatMessage)msg);
+		} else if (msg instanceof JSONObject){
+			if(((JSONObject)msg).has("user")){
+				handleJson((JSONObject)msg);
 			} else {
-				this.sendMessage(msg);
+				try {
+					if (((JSONObject)msg).getString("destination").equals("server")){
+						if (((JSONObject)msg).getString("type").equals("user")){
+							name = ((JSONObject)msg).getString("content");
+							return;
+						}
+					}
+					if (((JSONObject)msg).getString("destination").equals("client")){
+						if (((JSONObject)msg).getString("type").equals("status")){
+							status = ((JSONObject)msg).getString("content");
+						}
+					}
+					((JSONObject)msg).put("user", name);
+					parent.sendMessage(msg);
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		} else if ( msg instanceof ChatServer.JoinedServerMessage ) {
 			log("handling ChatServer.JoinedServerMessage");
@@ -59,23 +77,12 @@ public class User extends Actor {
 		postLog();
 	}
 
-	public void handleChatMessage(User.ChatMessage msg) {
-		JSONObject out = new JSONObject();
-		try {
-			out.put("type", "message");
-			out.put("content", msg.message);
-			output.writeUTF(out.toString());
-			log("sent message back to user");
-		} catch ( JSONException e ) {
-			logAndPost("swallowed JSONException in handleChatMessage");
-		} catch ( IOException e ) {
-			logAndPost("swallowed IOException in handleChatMessage");
+	private void handleJson(JSONObject msg) {
+		try{
+			output.writeUTF(msg.toString());
+		} catch (IOException e){
+			logAndPost("swallowed IOException in handleJson");
 		}
-	}
-
-	public void handleChatMessage(MessageFetcher.ChatMessage msg) {
-		User.ChatMessage convertedMessage = new User.ChatMessage(msg.message);
-		parent.sendMessage(convertedMessage);
 	}
 
 	public void handleJoinServerMessage(ChatServer.JoinedServerMessage msg) {
@@ -88,22 +95,6 @@ public class User extends Actor {
 
 	public enum UserCommand {
 		JOIN_SERVER
-	}
-
-	public class ChatMessage {
-		public final String message;
-
-		private ChatMessage( MessageFetcher.ChatMessage msg ) {
-			message = msg.message;
-		}
-
-		private ChatMessage(String message) {
-			this.message = message;
-		}
-
-		public String toString() {
-			return "ChatMessage#{ " + message + " }";
-		}
 	}
 
 	public class PostedCommand {

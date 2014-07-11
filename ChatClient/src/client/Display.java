@@ -21,6 +21,7 @@ public class Display implements ActionListener{
 	private JTextField typer;
 	private JTextField enter;
 	private JTextArea viewer;
+	private JTextArea currentUsers;
 	private JFrame frame;
 	
 	private ChatClient client;
@@ -47,11 +48,17 @@ public class Display implements ActionListener{
 		typer.setSize(0,0);
 		typer.addActionListener(this);
 		
-		JSplitPane pane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, viewer, typer);
-		pane.setDividerLocation((int)(frame.getHeight() / 1.3));
-		Container c = frame.getContentPane();
-		c.add(pane);
+		currentUsers = new JTextArea();
+		currentUsers.setVisible(true);
+		currentUsers.setEditable(false);
 		
+		Container c = frame.getContentPane();
+		JSplitPane pane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, currentUsers, viewer);
+		pane.setDividerLocation((int)(frame.getWidth() / 3));
+		c.add(pane);
+		JSplitPane pane2 = new JSplitPane(JSplitPane.VERTICAL_SPLIT, pane, typer);
+		pane2.setDividerLocation((int)(frame.getHeight() / 1.3));
+		c.add(pane2);
 		text = "";
 		
 		frame.setVisible(true);
@@ -122,7 +129,10 @@ public class Display implements ActionListener{
 	 */
 	public void recieveMessage(String type, String content) {
 		if(type.equals("message")){
-			this.printMessage(content);
+			printMessage(content);
+		}
+		if(type.equals("status")){
+			updateStatus(content);
 		}
 	}
 	
@@ -134,6 +144,14 @@ public class Display implements ActionListener{
 	 */
 	public void printMessage(String message){
 		viewer.append(message + "\n");
+	}
+	
+	/**
+	 * Dispays changes in a user's status
+	 * @param status A string containing the name of a user and their new status
+	 */
+	public void updateStatus(String status){
+		currentUsers.append(status + "\n");
 	}
 	
 	/**
@@ -174,8 +192,8 @@ public class Display implements ActionListener{
 	public void actionPerformed(ActionEvent e){
 		enter = (JTextField)e.getSource();
 		this.text = enter.getText();
-		//typer.setText("");
-		layer.sendJson("message", text);
+		typer.setText("");
+		layer.sendJson("client", "message", text);
 		this.clear();
 	}
 	
@@ -192,6 +210,24 @@ public class Display implements ActionListener{
 		@Override
 		public void windowClosing(WindowEvent e){
 			client.close();
+		}
+		
+		/**
+		 * Updates status when the user clicks out of the gui.
+		 * Status will be set to away.
+		 */
+		@Override
+		public void windowLostFocus(WindowEvent e){
+			layer.sendJson("client", "status", "away");
+		}
+		
+		/**
+		 * Updates status when the user clicks back into the gui.
+		 * Status will be set to online.
+		 */
+		@Override
+		public void windowGainedFocus(WindowEvent e){
+			layer.sendJson("client","status", "online");
 		}
 	}
 }

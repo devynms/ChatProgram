@@ -58,11 +58,12 @@ public class CommunicationLayer{
 	 * @param type The type of message being sent.
 	 * @param content The message being sent.
 	 */
-	public void sendJson(String type, String content) {
+	protected void sendJson(String destination, String type, String content) {
 		try{
 			JSONObject jsonMessage = new JSONObject();
+			jsonMessage.put("destination", destination);
 			jsonMessage.put("type", type);
-			jsonMessage.put("content", "me: " + content);
+			jsonMessage.put("content", content);
 			output.writeUTF(jsonMessage.toString());
 			System.out.println("sent a message: " + jsonMessage.toString());
 			} catch(JSONException e){
@@ -77,12 +78,12 @@ public class CommunicationLayer{
 	 * 
 	 * @throws JSONException if value of type or content is null
 	 */
-	public void processMessage(){
+	private void processMessage(){
 		if (messages.peek() != null){
 			JSONObject message = messages.pop();
 			try{
 			display.recieveMessage(message.getString("type"),
-								   message.getString("content"));
+					message.getString("user") + ": " + message.getString("content"));
 			} catch (JSONException e) {
 				System.out.println("Incoming message lacks type or content");
 			}
@@ -94,7 +95,7 @@ public class CommunicationLayer{
 	 * 
 	 * @throws IOException if an IO error occurs while closing the socket
 	 */
-	public void close(){
+	protected void close(){
 		try{
 		s.close();
 		} catch(IOException e){
@@ -117,7 +118,9 @@ public class CommunicationLayer{
 	 * @author Austin Hacker
 	 *
 	 */
-	public class MessageFetcher implements Runnable{
+	class MessageFetcher implements Runnable{
+		
+		boolean halt = false;
 		
 		/**
 		 * Listens to the server for incoming messages and stores any messages in a LinkedList for the
@@ -129,7 +132,6 @@ public class CommunicationLayer{
 		private void GrabMessages(){
 			try {
 				String message = input.readUTF();
-				System.out.println("hi");
 				JSONObject jsonMsg = new JSONObject(message);
 				messages.add(jsonMsg);
 				processMessage();
@@ -137,6 +139,7 @@ public class CommunicationLayer{
 				System.out.println("Incoming message not a JSON text string. Message will be discarded.");
 			} catch (IOException e) {
 				System.out.println("Error upon reading from input.");
+				halt = true;
 			}
 		}
 		
@@ -145,7 +148,7 @@ public class CommunicationLayer{
 		 * When connection to the server is lost, the client will shutdown.
 		 */
 		public void run(){
-			while(s.isConnected()){
+			while(!halt){
 				GrabMessages();
 			}
 			System.out.println("Server disconnected. Ending client.");
